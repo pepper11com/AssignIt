@@ -1,6 +1,6 @@
 package com.example.assignit.presentation
 
-
+const val AUTH_SCREEN = "AuthScreen"
 const val LOGIN_SCREEN = "LoginScreen"
 const val SIGN_UP_SCREEN = "SignUpScreen"
 

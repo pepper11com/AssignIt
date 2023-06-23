@@ -1,4 +1,4 @@
-package com.example.assignit.presentation.sign_up_screen
+package com.example.assignit.presentation.auth_screens.sign_up_screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

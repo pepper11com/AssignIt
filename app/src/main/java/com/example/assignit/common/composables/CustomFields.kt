@@ -32,7 +32,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import com.example.assignit.presentation.sign_up_screen.ValidationState
+import com.example.assignit.presentation.auth_screens.sign_up_screen.ValidationState
 import com.example.assignit.ui.theme.InvalidColor
 import com.example.assignit.ui.theme.MediumGrey
 import com.example.assignit.ui.theme.ValidColor

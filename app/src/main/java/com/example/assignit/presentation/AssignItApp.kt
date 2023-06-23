@@ -31,7 +31,8 @@ import com.example.assignit.ui.theme.DarkOrange
 import com.example.assignit.util.snackbar.SnackbarManager
 import kotlinx.coroutines.CoroutineScope
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.assignit.presentation.sign_up_screen.SignUpScreen
+import com.example.assignit.presentation.auth_screens.AuthScreen
+import com.example.assignit.presentation.auth_screens.sign_up_screen.SignUpScreen
 import com.example.assignit.presentation.starting_screen.home_screen.HomeScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,7 +70,8 @@ fun AssignItApp(
                 NavHost(
                     navController = appState.navController,
 //                    startDestination = SPLASH_SCREEN,
-                    startDestination = SIGN_UP_SCREEN,
+//                    startDestination = SIGN_UP_SCREEN,
+                    startDestination = AUTH_SCREEN,
                 ) {
                     taskAppGraph(
                         appState,
@@ -112,6 +114,10 @@ fun NavGraphBuilder.taskAppGraph(
             clearBackstack = { appState.clearBackstack() },
             viewModel = homeViewModel
         )
+    }
+
+    composable(AUTH_SCREEN){
+        AuthScreen()
     }
 
     /*
