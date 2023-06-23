@@ -97,6 +97,25 @@ class UserRepository @Inject constructor(
         }
     }
 
+    suspend fun isUsernameAvailable(username: String): Boolean {
+        val querySnapshot = firebaseFirestore.collection(USER_COLLECTION)
+            .whereEqualTo("username", username)
+            .limit(1)
+            .get()
+            .await()
+        return querySnapshot.isEmpty
+    }
+
+    suspend fun isEmailAvailable(email: String): Boolean {
+        val querySnapshot = firebaseFirestore.collection(USER_COLLECTION)
+            .whereEqualTo("email", email)
+            .limit(1)
+            .get()
+            .await()
+        return querySnapshot.isEmpty
+    }
+
+
     companion object{
         private const val USER_COLLECTION = "users"
     }

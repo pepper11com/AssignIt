@@ -9,8 +9,13 @@ import com.example.assignit.common.ext.passwordMatches
 import com.example.assignit.repository.UserRepository
 import com.example.assignit.util.resource.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,8 +23,19 @@ import javax.inject.Inject
 class SignUpViewModel @Inject constructor(
     private val repository: UserRepository
 ) : ViewModel() {
+
     private val _uiState = MutableStateFlow(SignUpUiState())
     val uiState: StateFlow<SignUpUiState> = _uiState
+
+    private var validationJob: Job? = null
+
+    val areAllFieldsValid: StateFlow<Boolean> = _uiState.map { uiState ->
+        uiState.isEmailValid == ValidationState.Valid &&
+                uiState.isUsernameValid == ValidationState.Valid &&
+                uiState.isPasswordValid == ValidationState.Valid &&
+                uiState.isConfirmPasswordValid == ValidationState.Valid
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
 
     private val email
         get() = uiState.value.email
@@ -31,19 +47,55 @@ class SignUpViewModel @Inject constructor(
         get() = uiState.value.confirmPassword
 
     fun onEmailChange(newValue: String) {
-        _uiState.value = _uiState.value.copy(email = newValue)
+        validationJob?.cancel()
+        _uiState.value = _uiState.value.copy(email = newValue, isEmailValid = ValidationState.InProgress)
+        validationJob = viewModelScope.launch {
+            delay(750)
+            _uiState.value = _uiState.value.copy(
+                isEmailValid = if (repository.isEmailAvailable(newValue) && newValue.isValidEmail()) {
+                    ValidationState.Valid
+                } else {
+                    ValidationState.Invalid
+                }
+            )
+        }
     }
 
     fun onUsernameChange(newValue: String) {
-        _uiState.value = _uiState.value.copy(username = newValue)
+        validationJob?.cancel()
+        _uiState.value = _uiState.value.copy(username = newValue, isUsernameValid = ValidationState.InProgress)
+        validationJob = viewModelScope.launch {
+            delay(750)
+            _uiState.value = _uiState.value.copy(
+                isUsernameValid = if (repository.isUsernameAvailable(newValue) && newValue.isNotEmpty()) {
+                    ValidationState.Valid
+                } else {
+                    ValidationState.Invalid
+                }
+            )
+        }
     }
 
     fun onPasswordChange(newValue: String) {
-        _uiState.value = _uiState.value.copy(password = newValue)
+        _uiState.value = _uiState.value.copy(
+            password = newValue,
+            isPasswordValid = if (newValue.isValidPassword()) {
+                ValidationState.Valid
+            } else {
+                ValidationState.Invalid
+            }
+        )
     }
 
     fun onConfirmPasswordChange(newValue: String) {
-        _uiState.value = _uiState.value.copy(confirmPassword = newValue)
+        _uiState.value = _uiState.value.copy(
+            confirmPassword = newValue,
+            isConfirmPasswordValid = if (newValue.passwordMatches(_uiState.value.password)) {
+                ValidationState.Valid
+            } else {
+                ValidationState.Invalid
+            }
+        )
     }
 
     fun signUp() {
@@ -95,7 +147,13 @@ class SignUpViewModel @Inject constructor(
         }
     }
 
-
-
+    fun areAllFieldsValid(): Boolean {
+        return uiState.value.run {
+            isEmailValid == ValidationState.Valid &&
+                    isUsernameValid == ValidationState.Valid &&
+                    isPasswordValid == ValidationState.Valid &&
+                    isConfirmPasswordValid == ValidationState.Valid
+        }
+    }
 
 }

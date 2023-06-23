@@ -6,5 +6,14 @@ data class SignUpUiState(
     val password: String = "",
     val confirmPassword: String = "",
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+
+    val isUsernameValid: ValidationState = ValidationState.NotChecked,
+    val isEmailValid: ValidationState = ValidationState.NotChecked,
+    val isPasswordValid: ValidationState = ValidationState.NotChecked,
+    val isConfirmPasswordValid: ValidationState = ValidationState.NotChecked,
 )
+
+enum class ValidationState {
+    NotChecked, Valid, Invalid, InProgress
+}
