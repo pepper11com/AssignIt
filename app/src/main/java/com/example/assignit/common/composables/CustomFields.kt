@@ -39,50 +39,45 @@ import com.example.assignit.ui.theme.ValidColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CustomOutlinedTextField(
+fun CustomOutlinedTextFieldSignUp(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
     validationState: ValidationState,
     onAction: () -> Unit,
     keyboardType: KeyboardType = KeyboardType.Text,
-    passwordVisibility: MutableState<Boolean> = remember { mutableStateOf(false)},
+    passwordVisibility: MutableState<Boolean> = remember { mutableStateOf(false) },
     showPasswordToggle: Boolean = false,
     confirmationHint: String = "",
     action: ImeAction = ImeAction.Next,
-    tint: Color = if(validationState == ValidationState.Valid) ValidColor else InvalidColor,
+    tint: Color = if (validationState == ValidationState.Valid) ValidColor else InvalidColor,
     validText: String,
     invalidText: String,
 ) {
     OutlinedTextField(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
+            .padding(horizontal = 24.dp, vertical = 5.dp),
         value = value,
         onValueChange = onValueChange,
         label = { Text(label) },
-        visualTransformation = if (passwordVisibility.value && showPasswordToggle) VisualTransformation.None else if(showPasswordToggle) PasswordVisualTransformation() else VisualTransformation.None,
+        visualTransformation = if (passwordVisibility.value && showPasswordToggle) VisualTransformation.None else if (showPasswordToggle) PasswordVisualTransformation() else VisualTransformation.None,
         keyboardOptions = KeyboardOptions(
-            imeAction = action,
-            keyboardType = keyboardType
+            imeAction = action, keyboardType = keyboardType
         ),
-        keyboardActions = KeyboardActions(
-            onNext = {
-                onAction()
-            }
-        ),
+        keyboardActions = KeyboardActions(onNext = {
+            onAction()
+        }),
         trailingIcon = {
-            Row (
+            Row(
                 modifier = Modifier.padding(end = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceAround
-            ){
+            ) {
                 if (showPasswordToggle) {
-                    IconButton(
-                        onClick = {
-                            passwordVisibility.value = !passwordVisibility.value
-                        }
-                    ) {
+                    IconButton(onClick = {
+                        passwordVisibility.value = !passwordVisibility.value
+                    }) {
                         Icon(
                             imageVector = if (passwordVisibility.value) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
                             contentDescription = if (passwordVisibility.value) "Hide password" else "Show password"
@@ -91,20 +86,19 @@ fun CustomOutlinedTextField(
                 }
                 when (validationState) {
                     ValidationState.Valid -> Icon(
-                        Icons.Filled.CheckCircle,
-                        tint = tint,
-                        contentDescription = confirmationHint
+                        Icons.Filled.CheckCircle, tint = tint, contentDescription = confirmationHint
                     )
+
                     ValidationState.Invalid -> Icon(
-                        Icons.Filled.Error,
-                        tint = tint,
-                        contentDescription = "Invalid"
+                        Icons.Filled.Error, tint = tint, contentDescription = "Invalid"
                     )
+
                     ValidationState.InProgress -> CircularProgressIndicator(
                         Modifier.size(
                             20.dp
                         ), strokeWidth = 1.dp
                     )
+
                     else -> Unit
                 }
             }
@@ -112,13 +106,13 @@ fun CustomOutlinedTextField(
         supportingText = {
             when (validationState) {
                 ValidationState.Valid -> Text(
-                    validText,
-                    color = ValidColor
+                    validText, color = ValidColor
                 )
+
                 ValidationState.Invalid -> Text(
-                    invalidText,
-                    color = InvalidColor
+                    invalidText, color = InvalidColor
                 )
+
                 else -> Text("")
             }
         },
@@ -129,28 +123,82 @@ fun CustomOutlinedTextField(
                 unfocusedBorderColor = ValidColor,
                 cursorColor = Color.White,
                 selectionColors = TextSelectionColors(
-                    MediumGrey,
-                    MediumGrey
+                    MediumGrey, MediumGrey
                 )
             )
+
             ValidationState.Invalid -> TextFieldDefaults.outlinedTextFieldColors(
                 focusedLabelColor = Color.White,
                 focusedBorderColor = InvalidColor,
                 unfocusedBorderColor = InvalidColor,
                 cursorColor = Color.White,
                 selectionColors = TextSelectionColors(
-                    MediumGrey,
-                    MediumGrey
+                    MediumGrey, MediumGrey
                 )
             )
+
             else -> TextFieldDefaults.outlinedTextFieldColors(
                 focusedLabelColor = Color.White,
                 cursorColor = Color.White,
                 selectionColors = TextSelectionColors(
-                    MediumGrey,
-                    MediumGrey
+                    MediumGrey, MediumGrey
                 )
             )
         }
+    )
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CustomOutlinedTextFieldLogin(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    onAction: () -> Unit,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    passwordVisibility: MutableState<Boolean> = remember { mutableStateOf(false) },
+    showPasswordToggle: Boolean = false,
+    action: ImeAction = ImeAction.Next,
+) {
+    OutlinedTextField(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 5.dp),
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        visualTransformation = if (passwordVisibility.value && showPasswordToggle) VisualTransformation.None else if (showPasswordToggle) PasswordVisualTransformation() else VisualTransformation.None,
+        keyboardOptions = KeyboardOptions(
+            imeAction = action, keyboardType = keyboardType
+        ),
+        keyboardActions = KeyboardActions(onNext = {
+            onAction()
+        }),
+        trailingIcon = {
+            Row(
+                modifier = Modifier.padding(end = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                if (showPasswordToggle) {
+                    IconButton(onClick = {
+                        passwordVisibility.value = !passwordVisibility.value
+                    }) {
+                        Icon(
+                            imageVector = if (passwordVisibility.value) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                            contentDescription = if (passwordVisibility.value) "Hide password" else "Show password"
+                        )
+                    }
+                }
+            }
+        },
+        colors = TextFieldDefaults.outlinedTextFieldColors(
+            focusedLabelColor = Color.White,
+            cursorColor = Color.White,
+            selectionColors = TextSelectionColors(
+                MediumGrey, MediumGrey
+            )
+        )
     )
 }

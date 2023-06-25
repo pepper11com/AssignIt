@@ -13,15 +13,27 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
+import com.example.assignit.services.GoogleAuth
 import com.example.assignit.ui.theme.AssignItTheme
+import com.google.android.gms.auth.api.identity.Identity
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    private val googleAuthUiClient by lazy {
+        GoogleAuth(
+            context = applicationContext,
+            oneTapClient = Identity.getSignInClient(applicationContext),
+        )
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            AssignItApp()
+            AssignItApp(
+                googleAuthUiClient = googleAuthUiClient,
+            )
         }
     }
 }

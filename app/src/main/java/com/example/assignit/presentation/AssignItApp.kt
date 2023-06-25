@@ -18,29 +18,35 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.assignit.presentation.auth_screens.login_screen.LoginScreen
+import com.example.assignit.presentation.auth_screens.sign_up_screen.LoginPickUsernameScreen
+import com.example.assignit.presentation.auth_screens.sign_up_screen.SignUpScreen
+import com.example.assignit.presentation.auth_screens.sign_up_screen.SignUpViewModel
 import com.example.assignit.presentation.starting_screen.HomeViewModel
+import com.example.assignit.presentation.starting_screen.home_screen.HomeScreen
 import com.example.assignit.presentation.starting_screen.splash_screen.SplashScreen
+import com.example.assignit.services.GoogleAuth
 import com.example.assignit.ui.theme.AssignItTheme
 import com.example.assignit.ui.theme.DarkGrey
 import com.example.assignit.ui.theme.DarkOrange
 import com.example.assignit.util.snackbar.SnackbarManager
 import kotlinx.coroutines.CoroutineScope
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.assignit.presentation.auth_screens.AuthScreen
-import com.example.assignit.presentation.auth_screens.sign_up_screen.SignUpScreen
-import com.example.assignit.presentation.starting_screen.home_screen.HomeScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun AssignItApp(
-   homeViewModel: HomeViewModel = hiltViewModel()
+   homeViewModel: HomeViewModel = hiltViewModel(),
+   googleAuthUiClient: GoogleAuth
 ) {
+    val singUpViewModel: SignUpViewModel = hiltViewModel()
+
     AssignItTheme(
         dynamicColor = false
     ) {
@@ -70,12 +76,15 @@ fun AssignItApp(
                 NavHost(
                     navController = appState.navController,
 //                    startDestination = SPLASH_SCREEN,
-//                    startDestination = SIGN_UP_SCREEN,
-                    startDestination = AUTH_SCREEN,
+                    startDestination = SIGN_UP_SCREEN,
+//                    startDestination = AUTH_SCREEN,
+//                    startDestination = LOGIN_SCREEN,
                 ) {
                     taskAppGraph(
                         appState,
-                        homeViewModel
+                        homeViewModel,
+                        singUpViewModel,
+                        googleAuthUiClient,
                     )
                 }
             }
@@ -105,7 +114,9 @@ fun resources(): Resources {
 
 fun NavGraphBuilder.taskAppGraph(
     appState: TaskAppState,
-    homeViewModel: HomeViewModel
+    homeViewModel: HomeViewModel,
+    singUpViewModel: SignUpViewModel,
+    googleAuthUiClient: GoogleAuth
 ) {
 
     composable(SPLASH_SCREEN) {
@@ -116,20 +127,28 @@ fun NavGraphBuilder.taskAppGraph(
         )
     }
 
-    composable(AUTH_SCREEN){
-        AuthScreen()
-    }
+//    composable(AUTH_SCREEN){
+//        AuthScreen()
+//    }
 
-    /*
+
     composable(LOGIN_SCREEN) {
         LoginScreen(
-
+            googleAuthUiClient = googleAuthUiClient
         )
     }
- */
+
     composable(SIGN_UP_SCREEN) {
         SignUpScreen(
+            viewModel = singUpViewModel,
+            googleAuthUiClient = googleAuthUiClient,
+            openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
+        )
+    }
 
+    composable(SIGN_UP_USERNAME_SCREEN){
+        LoginPickUsernameScreen(
+            viewModel = singUpViewModel,
         )
     }
 

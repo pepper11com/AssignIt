@@ -1,6 +1,7 @@
 package com.example.assignit.di
 
 import android.content.Context
+import com.example.assignit.services.GoogleAuth
 import com.example.assignit.util.snackbar.SnackbarManager
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
@@ -40,14 +41,10 @@ object AppModule {
         return Identity.getSignInClient(context)
     }
 
-    /*
-
     @Provides
     @Singleton
     fun provideGoogleAuth(@ApplicationContext context: Context, signInClient: SignInClient): GoogleAuth {
         return GoogleAuth(context, signInClient)
     }
-
-    */
 
 }

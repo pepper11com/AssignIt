@@ -1,4 +1,99 @@
 package com.example.assignit.presentation.auth_screens.login_screen
 
-class LoginViewModel {
+import android.util.Log
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.assignit.common.ext.isValidEmail
+import com.example.assignit.model.SignInResult
+import com.example.assignit.presentation.auth_screens.sign_up_screen.ValidationState
+import com.example.assignit.repository.UserRepository
+import com.example.assignit.services.GoogleAuth
+import com.example.assignit.util.resource.Resource
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class LoginViewModel @Inject constructor(
+    private val repository: UserRepository,
+    private val googleLogin: GoogleAuth
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(LoginUiState())
+    val uiState: StateFlow<LoginUiState> = _uiState
+
+    val areAllFieldsValid: StateFlow<Boolean> = _uiState.map { uiState ->
+        uiState.userInput.isValidEmail() || uiState.userInput.isNotEmpty() &&
+                uiState.password.isNotEmpty()
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    // Handle the change of email or username
+    fun onEmailOrUsernameChange(value: String) {
+        _uiState.value = _uiState.value.copy(
+            userInput = value.trim(),
+        )
+    }
+
+    // Handle the change of password
+    fun onPasswordChange(value: String) {
+        _uiState.value = _uiState.value.copy(password = value)
+    }
+
+    fun onGoogleSignInClick(result: SignInResult) {
+
+    }
+
+
+    // Handle the login process
+    fun onLoginClick() = viewModelScope.launch {
+        _uiState.value = _uiState.value.copy(isLoading = true)
+
+        Log.d("LoginViewModel", "userInput: ${_uiState.value.userInput} PASSWORD: ${_uiState.value.password}")
+
+        if (_uiState.value.userInput.isValidEmail()) {
+            Log.d("LoginViewModel", "userInput: ${_uiState.value.userInput}")
+            val result = repository.signInWithEmailAndPassword(_uiState.value.userInput, _uiState.value.password)
+            handleResult(result)
+        } else {
+            Log.d("LoginViewModel", "userInput2: ${_uiState.value.userInput} PASSWORD2: ${_uiState.value.password}")
+            val result = repository.signInWithUsernameAndPassword(_uiState.value.userInput, _uiState.value.password)
+            handleResult(result)
+        }
+    }
+
+    private fun handleResult(result: Resource<Unit>) {
+        _uiState.value = when(result) {
+            is Resource.Success ->{
+                Log.d("LoginViewModel", "SUCCESS: ${result.data}")
+                _uiState.value.copy(
+                    isLoading = false,
+                    error = null
+                )
+            }
+            is Resource.Error -> {
+                Log.d("LoginViewModel", "ERROR: ${result.message}")
+                _uiState.value.copy(
+                    isLoading = false,
+                    error = result.message,
+                    password = "",
+                    userInput = ""
+                )
+            }
+            else -> {
+                Log.d("LoginViewModel", "ELSE: ${result.message}")
+                _uiState.value.copy(
+                    isLoading = false,
+                    password = "",
+                    userInput = ""
+                )
+            }
+        }
+    }
+
 }

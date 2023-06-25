@@ -1,7 +1,12 @@
 package com.example.assignit.presentation.auth_screens.sign_up_screen
 
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,44 +16,56 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.assignit.R
-import com.example.assignit.common.composables.CustomOutlinedTextField
+import com.example.assignit.common.composables.CustomOutlinedTextFieldSignUp
 import com.example.assignit.common.composables.LoadingIndicator
+import com.example.assignit.presentation.SIGN_UP_SCREEN
+import com.example.assignit.presentation.SIGN_UP_USERNAME_SCREEN
+import com.example.assignit.services.GoogleAuth
+import com.example.assignit.ui.theme.DarkOrange
 import com.example.assignit.ui.theme.InvalidColor
+import com.example.assignit.util.resource.Resource
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun SignUpScreen(
-    viewModel: SignUpViewModel = hiltViewModel()
+    viewModel: SignUpViewModel,
+    googleAuthUiClient: GoogleAuth,
+    openAndPopUp: (String, String) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -57,36 +74,50 @@ fun SignUpScreen(
     val passwordVisibility = rememberSaveable { mutableStateOf(false) }
     val confirmPasswordVisibility = rememberSaveable { mutableStateOf(false) }
     val areAllFieldsValid by viewModel.areAllFieldsValid.collectAsState()
+    val googleAuthenticationState by viewModel.googleAuthenticationState.collectAsState()
 
+    val scope = rememberCoroutineScope()
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult(),
+        onResult = { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                scope.launch {
+                    val signInResult = googleAuthUiClient.signInWithIntent(
+                        intent = result.data ?: return@launch
+                    )
+                    viewModel.onGoogleSignInClick(signInResult)
+                }
+            }
+        }
+    )
+
+    when(googleAuthenticationState){
+        is Resource.Success -> {
+            openAndPopUp(SIGN_UP_USERNAME_SCREEN, SIGN_UP_SCREEN)
+        }
+
+        else -> Unit
+    }
 
 
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black),
-
         topBar = {
             CenterAlignedTopAppBar(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = Color.Black,
                     titleContentColor = Color.White
                 ),
-                navigationIcon = {
-                    IconButton(
-                        onClick = { /*TODO*/ }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
                 title = {
                     Icon(
                         modifier = Modifier
-                            .size(100.dp),
-                        painter = painterResource(id = R.drawable.assignit),
-                        contentDescription = "App Icon"
+                            .size(32.dp),
+                        painter = painterResource(id = R.drawable.ph_note_pencil),
+                        contentDescription = "App Icon",
+                        tint = DarkOrange
                     )
                 },
             )
@@ -140,9 +171,9 @@ fun SignUpScreen(
         LazyColumn(
             state = listState,
             modifier = Modifier
+                .background(Color.Black)
                 .fillMaxSize()
-                .padding(it)
-                .background(Color.Black),
+                .padding(it),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (uiState.isLoading) {
@@ -151,374 +182,39 @@ fun SignUpScreen(
                 }
             } else {
                 item {
-                    /*
-                    OutlinedTextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
-                        value = uiState.username,
-                        onValueChange = viewModel::onUsernameChange,
-                        label = { Text("Username") },
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(
-                            onNext = {
-                                focusManager.moveFocus(FocusDirection.Down)
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            modifier = Modifier
+                                .align(Alignment.CenterStart)
+                                .padding(horizontal = 16.dp, vertical = 32.dp),
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            textAlign = TextAlign.Start,
+                            text = "Create an account",
+                            color = Color.White,
+                        )
+                    }
+
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                val signInIntentSender = googleAuthUiClient.signInWithGoogle()
+                                launcher.launch(
+                                    IntentSenderRequest.Builder(
+                                        signInIntentSender ?: return@launch
+                                    ).build()
+                                )
                             }
-                        ),
-                        trailingIcon = {
-                            when (uiState.isUsernameValid) {
-                                ValidationState.Valid -> Icon(
-                                    Icons.Filled.CheckCircle,
-                                    tint = ValidColor,
-                                    contentDescription = "Username available"
-                                )
-
-                                ValidationState.Invalid -> Icon(
-                                    Icons.Filled.Error,
-                                    tint = InvalidColor,
-                                    contentDescription = "Username taken"
-                                )
-
-                                ValidationState.InProgress -> CircularProgressIndicator(
-                                    Modifier.size(
-                                        20.dp
-                                    ), strokeWidth = 1.dp
-                                )
-
-                                else -> Unit
-                            }
-                        },
-                        supportingText = {
-                            when (uiState.isUsernameValid) {
-                                ValidationState.Valid -> Text(
-                                    "Username available",
-                                    color = ValidColor
-                                )
-
-                                ValidationState.Invalid -> Text(
-                                    "Username taken",
-                                    color = InvalidColor
-                                )
-
-                                else -> Text("")
-                            }
-                        },
-                        colors =
-                        when (uiState.isUsernameValid) {
-                            ValidationState.Valid -> TextFieldDefaults.outlinedTextFieldColors(
-                                focusedLabelColor = Color.White,
-                                focusedBorderColor = ValidColor,
-                                unfocusedBorderColor = ValidColor,
-                                cursorColor = Color.White,
-                                selectionColors = TextSelectionColors(
-                                    TextSelectionColors,
-                                    TextSelectionColors
-                                )
-                            )
-
-                            ValidationState.Invalid -> TextFieldDefaults.outlinedTextFieldColors(
-                                focusedLabelColor = Color.White,
-                                focusedBorderColor = InvalidColor,
-                                unfocusedBorderColor = InvalidColor,
-                                cursorColor = Color.White,
-                                selectionColors = TextSelectionColors(
-                                    TextSelectionColors,
-                                    TextSelectionColors
-                                )
-                            )
-
-                            else -> TextFieldDefaults.outlinedTextFieldColors(
-                                focusedLabelColor = Color.White,
-                                cursorColor = Color.White,
-                                selectionColors = TextSelectionColors(
-                                    TextSelectionColors,
-                                    TextSelectionColors
-                                )
-                            )
                         }
-                    )
-
-                    OutlinedTextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
-                        value = uiState.email,
-                        onValueChange = viewModel::onEmailChange,
-                        label = { Text("Email") },
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(
-                            onNext = {
-                                focusManager.moveFocus(FocusDirection.Down)
-                            }
-                        ),
-                        trailingIcon = {
-                            when (uiState.isEmailValid) {
-                                ValidationState.Valid -> Icon(
-                                    Icons.Filled.CheckCircle,
-                                    tint = ValidColor,
-                                    contentDescription = "Email available"
-                                )
-
-                                ValidationState.Invalid -> Icon(
-                                    Icons.Filled.Error,
-                                    tint = InvalidColor,
-                                    contentDescription = "Email taken"
-                                )
-
-                                ValidationState.InProgress -> CircularProgressIndicator(
-                                    Modifier.size(
-                                        20.dp
-                                    ), strokeWidth = 1.dp
-                                )
-
-                                else -> Unit
-                            }
-                        },
-                        supportingText = {
-                            when (uiState.isEmailValid) {
-                                ValidationState.Valid -> Text(
-                                    "Email available",
-                                    color = ValidColor
-                                )
-
-                                ValidationState.Invalid -> Text(
-                                    "Email taken or invalid",
-                                    color = InvalidColor
-                                )
-
-                                else -> Text("")
-                            }
-                        },
-                        colors =
-                        when (uiState.isEmailValid) {
-                            ValidationState.Valid -> TextFieldDefaults.outlinedTextFieldColors(
-                                focusedLabelColor = Color.White,
-                                focusedBorderColor = ValidColor,
-                                unfocusedBorderColor = ValidColor,
-                                cursorColor = Color.White,
-                                selectionColors = TextSelectionColors(
-                                    MediumGrey,
-                                    MediumGrey
-                                )
-                            )
-
-                            ValidationState.Invalid -> TextFieldDefaults.outlinedTextFieldColors(
-                                focusedLabelColor = Color.White,
-                                focusedBorderColor = InvalidColor,
-                                unfocusedBorderColor = InvalidColor,
-                                cursorColor = Color.White,
-                                selectionColors = TextSelectionColors(
-                                    MediumGrey,
-                                    MediumGrey
-                                )
-                            )
-
-                            else -> TextFieldDefaults.outlinedTextFieldColors(
-                                focusedLabelColor = Color.White,
-                                cursorColor = Color.White,
-                                selectionColors = TextSelectionColors(
-                                    MediumGrey,
-                                    MediumGrey
-                                )
-                            )
-                        }
-                    )
+                    ) {
+                        Text(
+                            "Create account with Google",
+                            color = Color.White
+                        )
+                    }
 
 
-                    OutlinedTextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
-                        value = uiState.password,
-                        onValueChange = viewModel::onPasswordChange,
-                        label = { Text("Password") },
-                        visualTransformation = if (passwordVisibility.value) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Next,
-                            keyboardType = KeyboardType.Password
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onNext = {
-                                focusManager.moveFocus(FocusDirection.Down)
-                            }
-                        ),
-                        trailingIcon = {
-                            Row (
-                                modifier = Modifier.padding(end = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceAround
-                            ){
-                                IconButton(
-                                    onClick = {
-                                        passwordVisibility.value = !passwordVisibility.value
-                                    }
-                                ) {
-                                    Icon(
-                                        imageVector = if (passwordVisibility.value) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                                        contentDescription = if (passwordVisibility.value) "Hide password" else "Show password"
-                                    )
-                                }
-                                when (uiState.isPasswordValid) {
-                                    ValidationState.Valid -> Icon(
-                                        Icons.Filled.CheckCircle,
-                                        tint = ValidColor,
-                                        contentDescription = "Password is valid"
-                                    )
-                                    ValidationState.Invalid -> Icon(
-                                        Icons.Filled.Error,
-                                        tint = InvalidColor,
-                                        contentDescription = "Password is invalid"
-                                    )
-                                    else -> Unit
-                                }
-                            }
-                        },
-                        supportingText = {
-                            when (uiState.isPasswordValid) {
-                                ValidationState.Valid -> Text(
-                                    "Password is valid",
-                                    color = ValidColor
-                                )
-                                ValidationState.Invalid -> Text(
-                                    "Password is invalid",
-                                    color = InvalidColor
-                                )
-                                else -> Text("")
-                            }
-                        },
-                        colors =
-                        when (uiState.isPasswordValid) {
-                            ValidationState.Valid -> TextFieldDefaults.outlinedTextFieldColors(
-                                focusedLabelColor = Color.White,
-                                focusedBorderColor = ValidColor,
-                                unfocusedBorderColor = ValidColor,
-                                cursorColor = Color.White,
-                                selectionColors = TextSelectionColors(
-                                    MediumGrey,
-                                    MediumGrey
-                                )
-                            )
-                            ValidationState.Invalid -> TextFieldDefaults.outlinedTextFieldColors(
-                                focusedLabelColor = Color.White,
-                                focusedBorderColor = InvalidColor,
-                                unfocusedBorderColor = InvalidColor,
-                                cursorColor = Color.White,
-                                selectionColors = TextSelectionColors(
-                                    MediumGrey,
-                                    MediumGrey
-                                )
-                            )
-                            else -> TextFieldDefaults.outlinedTextFieldColors(
-                                focusedLabelColor = Color.White,
-                                cursorColor = Color.White,
-                                selectionColors = TextSelectionColors(
-                                    MediumGrey,
-                                    MediumGrey
-                                )
-                            )
-                        }
-                    )
-
-                    OutlinedTextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
-                        value = uiState.confirmPassword,
-                        onValueChange = viewModel::onConfirmPasswordChange,
-                        label = { Text("Confirm Password") },
-                        visualTransformation = if (confirmPasswordVisibility.value) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Done,
-                            keyboardType = KeyboardType.Password
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                focusManager.clearFocus()
-                            }
-                        ),
-                        trailingIcon = {
-                            Row (
-                                modifier = Modifier.padding(end = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceAround
-                            ){
-                                IconButton(
-                                    onClick = {
-                                        confirmPasswordVisibility.value =
-                                            !confirmPasswordVisibility.value
-                                    }
-                                ) {
-                                    Icon(
-                                        imageVector = if (confirmPasswordVisibility.value) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                                        contentDescription = if (confirmPasswordVisibility.value) "Hide password" else "Show password"
-                                    )
-                                }
-                                when (uiState.isConfirmPasswordValid) {
-                                    ValidationState.Valid -> Icon(
-                                        Icons.Filled.CheckCircle,
-                                        tint = ValidColor,
-                                        contentDescription = "Password matches"
-                                    )
-                                    ValidationState.Invalid -> Icon(
-                                        Icons.Filled.Error,
-                                        tint = InvalidColor,
-                                        contentDescription = "Password doesn't match"
-                                    )
-                                    else -> Unit
-                                }
-                            }
-                        },
-                        supportingText = {
-                            when (uiState.isConfirmPasswordValid) {
-                                ValidationState.Valid -> Text(
-                                    "Password matches",
-                                    color = ValidColor
-                                )
-                                ValidationState.Invalid -> Text(
-                                    "Password doesn't match",
-                                    color = InvalidColor
-                                )
-                                else -> Text("")
-                            }
-                        },
-                        colors =
-                        when (uiState.isConfirmPasswordValid) {
-                            ValidationState.Valid -> TextFieldDefaults.outlinedTextFieldColors(
-                                focusedLabelColor = Color.White,
-                                focusedBorderColor = ValidColor,
-                                unfocusedBorderColor = ValidColor,
-                                cursorColor = Color.White,
-                                selectionColors = TextSelectionColors(
-                                    MediumGrey,
-                                    MediumGrey
-                                )
-                            )
-
-                            ValidationState.Invalid -> TextFieldDefaults.outlinedTextFieldColors(
-                                focusedLabelColor = Color.White,
-                                focusedBorderColor = InvalidColor,
-                                unfocusedBorderColor = InvalidColor,
-                                cursorColor = Color.White,
-                                selectionColors = TextSelectionColors(
-                                    MediumGrey,
-                                    MediumGrey
-                                )
-                            )
-
-                            else -> TextFieldDefaults.outlinedTextFieldColors(
-                                focusedLabelColor = Color.White,
-                                cursorColor = Color.White,
-                                selectionColors = TextSelectionColors(
-                                    MediumGrey,
-                                    MediumGrey
-                                )
-                            )
-                        }
-                    )
-
-                     */
-
-                    CustomOutlinedTextField(
+                    CustomOutlinedTextFieldSignUp(
                         label = "Username",
                         value = uiState.username,
                         onValueChange = viewModel::onUsernameChange,
@@ -528,7 +224,7 @@ fun SignUpScreen(
                         invalidText = "Username taken",
                     )
 
-                    CustomOutlinedTextField(
+                    CustomOutlinedTextFieldSignUp(
                         label = "Email",
                         value = uiState.email,
                         onValueChange = viewModel::onEmailChange,
@@ -538,7 +234,7 @@ fun SignUpScreen(
                         invalidText = "Email taken or invalid",
                     )
 
-                    CustomOutlinedTextField(
+                    CustomOutlinedTextFieldSignUp(
                         label = "Password",
                         value = uiState.password,
                         onValueChange = viewModel::onPasswordChange,
@@ -551,12 +247,13 @@ fun SignUpScreen(
                         invalidText = "Password is invalid",
                     )
 
-                    CustomOutlinedTextField(
+                    //todo test this onAction = { focusManager.moveFocus(FocusDirection.Exit) },
+                    CustomOutlinedTextFieldSignUp(
                         label = "Confirm Password",
                         value = uiState.confirmPassword,
                         onValueChange = viewModel::onConfirmPasswordChange,
                         validationState = uiState.isConfirmPasswordValid,
-                        onAction = { focusManager.clearFocus() },
+                        onAction = { focusManager.moveFocus(FocusDirection.Exit) },
                         keyboardType = KeyboardType.Password,
                         passwordVisibility = confirmPasswordVisibility,
                         showPasswordToggle = true,

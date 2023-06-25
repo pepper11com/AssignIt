@@ -15,6 +15,7 @@ import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.assignit.ui.theme.DarkOrange
@@ -29,6 +30,7 @@ fun CustomTabRow(
     rowColor: Color = DarkOrange,
     pagerState: PagerState,
     coroutineScope: CoroutineScope,
+    focusManager: FocusManager,
 ) {
     val indicator = @Composable { tabPositions: List<TabPosition> ->
         HomeCategoryTabIndicator(
@@ -39,13 +41,13 @@ fun CustomTabRow(
 
     TabRow(
         selectedTabIndex = selectedIndex,
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = Color.Black,
         contentColor = Color.White,
         indicator = indicator,
         divider = {
             Spacer(
                 Modifier
-//                    .padding(horizontal = 24.dp)
+                    .padding(horizontal = 24.dp)
                     .height(1.dp)
                     .background(Color.White)
             )
@@ -57,6 +59,7 @@ fun CustomTabRow(
                 selected = index == selectedIndex,
                 onClick = {
                     if (index != selectedIndex) {
+                        focusManager.clearFocus()
                         coroutineScope.launch {
                             pagerState.animateScrollToPage(index)
                         }
@@ -76,7 +79,7 @@ fun HomeCategoryTabIndicator(
 ) {
     Spacer(
         modifier
-            //.padding(horizontal = 24.dp)
+            .padding(horizontal = 24.dp)
             .height(4.dp)
             .background(color, RoundedCornerShape(topStartPercent = 100, topEndPercent = 100))
     )
