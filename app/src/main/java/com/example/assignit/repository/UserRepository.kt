@@ -21,7 +21,7 @@ class UserRepository @Inject constructor(
     private val firebaseFirestore: FirebaseFirestore,
     private val googleAuth: GoogleAuth
 ) {
-    private val currentUser = MutableStateFlow(firebaseAuth.currentUser)
+    val currentUser = MutableStateFlow(firebaseAuth.currentUser)
 
     val hasUser: Boolean
         get() = firebaseAuth.currentUser != null
@@ -34,14 +34,29 @@ class UserRepository @Inject constructor(
 
     //User Authentication:
 
-    suspend fun signIn(email: String, password: String): Flow<Resource<Unit>> = flow {
-        emit(Resource.Loading())
-        try {
-            val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
-            if (result.user != null) emit(Resource.Success(Unit))
-            else emit(Resource.Error("Failed to sign in"))
+    suspend fun getUserDataById(userId: String): Resource<User> {
+        return try {
+            val doc = firebaseFirestore.collection(USER_COLLECTION).document(userId).get().await()
+            Log.d("UserRepository", "getUserDataById: $doc")
+            val user = doc.toObject(User::class.java)
+            if (user != null) Resource.Success(user)
+            else Resource.Error("Failed to get user data")
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Unknown error occurred"))
+            Resource.Error(e.message ?: "Unknown error occurred")
+        }
+    }
+
+    suspend fun searchUsersByUsername(username: String): Resource<List<User>> {
+        return try {
+            val usersQuerySnapshot = firebaseFirestore.collection(USER_COLLECTION)
+                .whereEqualTo("username", username)
+                .get()
+                .await()
+
+            val users = usersQuerySnapshot.documents.mapNotNull { it.toObject(User::class.java) }
+            Resource.Success(users)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Unknown error occurred")
         }
     }
 
@@ -127,39 +142,6 @@ class UserRepository @Inject constructor(
             Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Unknown error occurred")
-        }
-    }
-
-    //User Data:
-    suspend fun getUserData(): Flow<Resource<User>> = flow {
-        emit(Resource.Loading())
-        try {
-            val uid = firebaseAuth.currentUser?.uid
-            if (uid != null) {
-                val doc = firebaseFirestore.collection(USER_COLLECTION).document(uid).get().await()
-                val user = doc.toObject(User::class.java)
-                if (user != null) emit(Resource.Success(user))
-                else emit(Resource.Error("Failed to get user data"))
-            } else {
-                emit(Resource.Error("User not logged in"))
-            }
-        } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Unknown error occurred"))
-        }
-    }
-
-    suspend fun updateUserData(user: User): Flow<Resource<Unit>> = flow {
-        emit(Resource.Loading())
-        try {
-            val uid = firebaseAuth.currentUser?.uid
-            if (uid != null) {
-                firebaseFirestore.collection(USER_COLLECTION).document(uid).set(user).await()
-                emit(Resource.Success(Unit))
-            } else {
-                emit(Resource.Error("User not logged in"))
-            }
-        } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Unknown error occurred"))
         }
     }
 

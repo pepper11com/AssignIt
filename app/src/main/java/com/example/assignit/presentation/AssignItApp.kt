@@ -1,6 +1,7 @@
 package com.example.assignit.presentation
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.res.Resources
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -21,13 +22,17 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.example.assignit.presentation.auth_screens.login_screen.LoginScreen
 import com.example.assignit.presentation.auth_screens.sign_up_screen.LoginPickUsernameScreen
 import com.example.assignit.presentation.auth_screens.sign_up_screen.SignUpScreen
 import com.example.assignit.presentation.auth_screens.sign_up_screen.SignUpViewModel
+import com.example.assignit.presentation.deeplink_screen.DeeplinkScreen
 import com.example.assignit.presentation.starting_screen.HomeViewModel
 import com.example.assignit.presentation.starting_screen.home_screen.HomeScreen
 import com.example.assignit.presentation.starting_screen.splash_screen.SplashScreen
@@ -42,8 +47,8 @@ import kotlinx.coroutines.CoroutineScope
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun AssignItApp(
-   homeViewModel: HomeViewModel = hiltViewModel(),
-   googleAuthUiClient: GoogleAuth
+    homeViewModel: HomeViewModel = hiltViewModel(),
+    googleAuthUiClient: GoogleAuth
 ) {
     val singUpViewModel: SignUpViewModel = hiltViewModel()
 
@@ -75,10 +80,7 @@ fun AssignItApp(
             ) {
                 NavHost(
                     navController = appState.navController,
-//                    startDestination = SPLASH_SCREEN,
-                    startDestination = SIGN_UP_SCREEN,
-//                    startDestination = AUTH_SCREEN,
-//                    startDestination = LOGIN_SCREEN,
+                    startDestination = SPLASH_SCREEN,
                 ) {
                     taskAppGraph(
                         appState,
@@ -127,14 +129,10 @@ fun NavGraphBuilder.taskAppGraph(
         )
     }
 
-//    composable(AUTH_SCREEN){
-//        AuthScreen()
-//    }
-
-
     composable(LOGIN_SCREEN) {
         LoginScreen(
-            googleAuthUiClient = googleAuthUiClient
+            googleAuthUiClient = googleAuthUiClient,
+            openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
         )
     }
 
@@ -146,17 +144,41 @@ fun NavGraphBuilder.taskAppGraph(
         )
     }
 
-    composable(SIGN_UP_USERNAME_SCREEN){
+    composable(SIGN_UP_USERNAME_SCREEN) {
         LoginPickUsernameScreen(
             viewModel = singUpViewModel,
+            openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
         )
     }
-
-
 
     composable(HOME_SCREEN) {
         HomeScreen(
             viewModel = homeViewModel
+        )
+    }
+
+    composable(
+        route = DEEPLINK_SCREEN,
+        deepLinks = listOf (
+            navDeepLink {
+                //uriPattern = "https://assign-it-wesbite.vercel.app/{groupId}"
+                uriPattern = "myapp://{groupId}"
+                action = Intent.ACTION_VIEW
+            }
+        ),
+        arguments = listOf(
+            navArgument("groupId") {
+                type = NavType.StringType
+                defaultValue = ""
+            }
+        )
+    ) { entry ->
+        val groupId = entry.arguments?.getString("groupId")
+
+        // Now you can use the groupId to display the appropriate UI for joining or rejecting the group
+        DeeplinkScreen(
+            groupId = groupId ?: "",
+            openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
         )
     }
 
@@ -167,8 +189,6 @@ fun NavGraphBuilder.taskAppGraph(
 
         )
     }
-
      */
-
 
 }

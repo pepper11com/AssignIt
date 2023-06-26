@@ -52,6 +52,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.assignit.R
 import com.example.assignit.common.composables.CustomOutlinedTextFieldSignUp
 import com.example.assignit.common.composables.LoadingIndicator
+import com.example.assignit.presentation.LOGIN_SCREEN
 import com.example.assignit.presentation.SIGN_UP_SCREEN
 import com.example.assignit.presentation.SIGN_UP_USERNAME_SCREEN
 import com.example.assignit.services.GoogleAuth
@@ -96,7 +97,6 @@ fun SignUpScreen(
         is Resource.Success -> {
             openAndPopUp(SIGN_UP_USERNAME_SCREEN, SIGN_UP_SCREEN)
         }
-
         else -> Unit
     }
 
@@ -261,6 +261,18 @@ fun SignUpScreen(
                         validText = "Password matches",
                         invalidText = "Password doesn't match",
                     )
+
+
+                    TextButton(
+                        onClick = {
+                            openAndPopUp(LOGIN_SCREEN, SIGN_UP_SCREEN)
+                        }
+                    ) {
+                        Text(
+                            "Already have an account? Log in",
+                            color = Color.White
+                        )
+                    }
 
                 }
 

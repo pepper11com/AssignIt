@@ -1,6 +1,5 @@
 package com.example.assignit.presentation.auth_screens.sign_up_screen
 
-import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,9 +8,10 @@ import com.example.assignit.common.ext.isValidPassword
 import com.example.assignit.common.ext.passwordMatches
 import com.example.assignit.model.SignInResult
 import com.example.assignit.model.User
+import com.example.assignit.presentation.HOME_SCREEN
+import com.example.assignit.presentation.SIGN_UP_USERNAME_SCREEN
 import com.example.assignit.repository.UserRepository
 import com.example.assignit.util.resource.Resource
-import com.google.android.gms.auth.api.signin.GoogleSignIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -37,8 +37,6 @@ class SignUpViewModel @Inject constructor(
     private val _googleUsernameAuthenticationState = MutableStateFlow<Resource<Unit>>(Resource.Empty())
     val googleUsernameAuthenticationState: StateFlow<Resource<Unit>> get() = _googleUsernameAuthenticationState
 
-
-
     private var validationJob: Job? = null
 
     val areAllFieldsValid: StateFlow<Boolean> = _uiState.map { uiState ->
@@ -48,6 +46,9 @@ class SignUpViewModel @Inject constructor(
                 uiState.isConfirmPasswordValid == ValidationState.Valid
     }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
+    val areAllFieldsValidGoogle: StateFlow<Boolean> = _uiState.map { uiState ->
+                uiState.isUsernameValid == ValidationState.Valid
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     private val email
         get() = uiState.value.email
@@ -79,7 +80,7 @@ class SignUpViewModel @Inject constructor(
         validationJob = viewModelScope.launch {
             delay(750)
             _uiState.value = _uiState.value.copy(
-                isUsernameValid = if (repository.isUsernameAvailable(newValue) && newValue.isNotEmpty() && !newValue.isValidEmail()) {
+                isUsernameValid = if (repository.isUsernameAvailable(newValue) && newValue.isNotEmpty() && !newValue.isValidEmail() && newValue.length >= 3) {
                     ValidationState.Valid
                 } else {
                     ValidationState.Invalid
@@ -103,20 +104,6 @@ class SignUpViewModel @Inject constructor(
             )
         }
     }
-//    fun onGoogleUsernameChange(newValue: String) {
-//        validationJob?.cancel()
-//        _googleUsername.value = newValue
-//        validationJob = viewModelScope.launch {
-//            delay(750)
-//            _uiState.value = _uiState.value.copy(
-//                isUsernameValid = if (repository.isUsernameAvailable(newValue) && newValue.isNotEmpty() && !newValue.isValidEmail()) {
-//                    ValidationState.Valid
-//                } else {
-//                    ValidationState.Invalid
-//                }
-//            )
-//        }
-//    }
 
     fun onPasswordChange(newValue: String) {
         _uiState.value = _uiState.value.copy(
@@ -150,7 +137,7 @@ class SignUpViewModel @Inject constructor(
         }
     }
 
-    fun createGoogleUser() {
+    fun createGoogleUser(openAndPopUp: (String, String) -> Unit) {
         _googleUsernameAuthenticationState.value = Resource.Loading()
 
         val currentUsername = username
@@ -173,6 +160,7 @@ class SignUpViewModel @Inject constructor(
                 is Resource.Success -> {
                     // handle user creation result
                     _googleUsernameAuthenticationState.value = Resource.Success(Unit)
+                    openAndPopUp(HOME_SCREEN, SIGN_UP_USERNAME_SCREEN)
                     Log.d("SignUpViewModel", "createGoogleUser: Success")
                 }
                 is Resource.Error -> {
@@ -185,8 +173,6 @@ class SignUpViewModel @Inject constructor(
             }
         }
     }
-
-
 
     fun signUp() {
         val currentUsername = username
@@ -236,5 +222,4 @@ class SignUpViewModel @Inject constructor(
             _uiState.value = SignUpUiState(isLoading = false)
         }
     }
-
 }

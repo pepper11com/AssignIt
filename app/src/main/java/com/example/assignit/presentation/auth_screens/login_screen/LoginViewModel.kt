@@ -5,7 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.assignit.common.ext.isValidEmail
 import com.example.assignit.model.SignInResult
-import com.example.assignit.presentation.auth_screens.sign_up_screen.ValidationState
+import com.example.assignit.presentation.HOME_SCREEN
+import com.example.assignit.presentation.LOGIN_SCREEN
+import com.example.assignit.presentation.SIGN_UP_USERNAME_SCREEN
 import com.example.assignit.repository.UserRepository
 import com.example.assignit.services.GoogleAuth
 import com.example.assignit.util.resource.Resource
@@ -13,7 +15,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -45,8 +46,42 @@ class LoginViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(password = value)
     }
 
-    fun onGoogleSignInClick(result: SignInResult) {
+    fun onGoogleSignInClick(result: SignInResult, openAndPopUp: (String, String) -> Unit) {
+        _uiState.value = _uiState.value.copy(isLoading = true)
+        Log.d("SignUpViewModel", "onGoogleSignInClick: $result")
+        if (result.data != null) {
+            viewModelScope.launch {
+                val userId = result.data.userId
+                Log.d("SignUpViewModel", "User ID: $userId")
 
+                // Getting the user object from the database with the user ID
+                when(val userDataResult = repository.getUserDataById(userId)) {
+                    is Resource.Success -> {
+                        val userData = userDataResult.data
+                        if(userData?.username == "" || userData?.username == null) {
+                            // Go to pick a username screen
+                            Log.d("SignUpViewModel", "userData?.username == null")
+                            openAndPopUp(SIGN_UP_USERNAME_SCREEN, LOGIN_SCREEN)
+                            _uiState.value = _uiState.value.copy(isLoading = false, error = null)
+                        } else {
+                            // Go to home screen
+                            Log.d("SignUpViewModel", "userData?.username == null ELSE ELSE ELSE")
+                            openAndPopUp(HOME_SCREEN, LOGIN_SCREEN)
+                            _uiState.value = _uiState.value.copy(isLoading = false, error = null)
+                        }
+                    }
+                    is Resource.Error -> {
+                        _uiState.value = _uiState.value.copy(isLoading = false, error = userDataResult.message ?: "Error fetching user data")
+                    }
+
+                    else -> {
+                        _uiState.value = _uiState.value.copy(isLoading = false, error = "Unknown error")
+                    }
+                }
+            }
+        } else {
+            _uiState.value = _uiState.value.copy(isLoading = false, error = result.errorMessage ?: "Unknown error")
+        }
     }
 
 

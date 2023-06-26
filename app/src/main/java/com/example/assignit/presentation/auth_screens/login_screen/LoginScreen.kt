@@ -53,6 +53,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.assignit.R
 import com.example.assignit.common.composables.CustomOutlinedTextFieldLogin
 import com.example.assignit.common.composables.LoadingIndicator
+import com.example.assignit.presentation.LOGIN_SCREEN
+import com.example.assignit.presentation.SIGN_UP_SCREEN
 import com.example.assignit.services.GoogleAuth
 import com.example.assignit.ui.theme.DarkOrange
 import com.example.assignit.ui.theme.InvalidColor
@@ -62,7 +64,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel(),
-    googleAuthUiClient: GoogleAuth
+    googleAuthUiClient: GoogleAuth,
+    openAndPopUp: (String, String) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -80,7 +83,7 @@ fun LoginScreen(
                     val signInResult = googleAuthUiClient.signInWithIntent(
                         intent = result.data ?: return@launch
                     )
-                    viewModel.onGoogleSignInClick(signInResult)
+                    viewModel.onGoogleSignInClick(signInResult,  openAndPopUp)
                 }
             }
         }
@@ -212,7 +215,19 @@ fun LoginScreen(
                     ) {
                         Text(
                             "Login with Google",
-                            color = MaterialTheme.colorScheme.secondary
+                            color = Color.White
+                        )
+                    }
+
+
+                    TextButton(
+                        onClick = {
+                            openAndPopUp(SIGN_UP_SCREEN, LOGIN_SCREEN)
+                        }
+                    ) {
+                        Text(
+                            "Don't have an account? Sign up",
+                            color = Color.White
                         )
                     }
 
