@@ -71,10 +71,12 @@ class LoginViewModel @Inject constructor(
                         }
                     }
                     is Resource.Error -> {
+                        Log.d("SignUpViewModel", "Resource.Error")
                         _uiState.value = _uiState.value.copy(isLoading = false, error = userDataResult.message ?: "Error fetching user data")
                     }
 
                     else -> {
+                        Log.d("SignUpViewModel", "ELSE ELSE ELSE")
                         _uiState.value = _uiState.value.copy(isLoading = false, error = "Unknown error")
                     }
                 }

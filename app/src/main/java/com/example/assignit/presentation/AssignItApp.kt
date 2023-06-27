@@ -28,11 +28,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import com.example.assignit.presentation.auth_screens.group_detail_screen.GroupDetailScreen
 import com.example.assignit.presentation.auth_screens.login_screen.LoginScreen
 import com.example.assignit.presentation.auth_screens.sign_up_screen.LoginPickUsernameScreen
 import com.example.assignit.presentation.auth_screens.sign_up_screen.SignUpScreen
 import com.example.assignit.presentation.auth_screens.sign_up_screen.SignUpViewModel
 import com.example.assignit.presentation.deeplink_screen.DeeplinkScreen
+import com.example.assignit.presentation.group_screen.GroupScreen
 import com.example.assignit.presentation.starting_screen.HomeViewModel
 import com.example.assignit.presentation.starting_screen.home_screen.HomeScreen
 import com.example.assignit.presentation.starting_screen.splash_screen.SplashScreen
@@ -153,15 +155,28 @@ fun NavGraphBuilder.taskAppGraph(
 
     composable(HOME_SCREEN) {
         HomeScreen(
-            viewModel = homeViewModel
+            viewModel = homeViewModel,
+            navigate = { route -> appState.navigate(route) }
         )
+    }
+
+    composable(GROUP_SCREEN){
+        GroupScreen(
+            openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
+            navigate = { route -> appState.navigate(route) }
+        )
+    }
+
+    composable(
+        route = "$GROUP_DETAIL_SCREEN/{groupId}",
+    ) {
+        GroupDetailScreen()
     }
 
     composable(
         route = DEEPLINK_SCREEN,
         deepLinks = listOf (
             navDeepLink {
-                //uriPattern = "https://assign-it-wesbite.vercel.app/{groupId}"
                 uriPattern = "myapp://{groupId}"
                 action = Intent.ACTION_VIEW
             }
@@ -174,8 +189,6 @@ fun NavGraphBuilder.taskAppGraph(
         )
     ) { entry ->
         val groupId = entry.arguments?.getString("groupId")
-
-        // Now you can use the groupId to display the appropriate UI for joining or rejecting the group
         DeeplinkScreen(
             groupId = groupId ?: "",
             openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },

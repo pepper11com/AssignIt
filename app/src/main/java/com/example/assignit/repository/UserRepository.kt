@@ -40,10 +40,21 @@ class UserRepository @Inject constructor(
             Log.d("UserRepository", "getUserDataById: $doc")
             val user = doc.toObject(User::class.java)
             if (user != null) Resource.Success(user)
-            else Resource.Error("Failed to get user data")
+            else Resource.Error("No user found, create an account or try again later")
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Unknown error occurred")
         }
+    }
+
+    suspend fun getCurrentUser(): User {
+        val firebaseUser = firebaseAuth.currentUser
+            ?: throw IllegalStateException("No current user")
+
+        return firebaseFirestore.collection(USER_COLLECTION)
+            .document(firebaseUser.uid)
+            .get()
+            .await()
+            .toObject(User::class.java)!!
     }
 
     suspend fun searchUsersByUsername(username: String): Resource<List<User>> {

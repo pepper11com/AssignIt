@@ -1,5 +1,6 @@
 package com.example.assignit.presentation.starting_screen
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -44,6 +45,8 @@ class HomeViewModel @Inject constructor(
                     val group = user?.let { Group(groupId, name, it) }
                     if (group != null) {
                         groupRepository.createGroup(group)
+                        Log.d("HomeViewModel", "createGroup: $group $user $groupId")
+                        //groupRepository.addUserToGroup(groupId, user)
                     }
                     _currentGroupId.value = groupId
                 }

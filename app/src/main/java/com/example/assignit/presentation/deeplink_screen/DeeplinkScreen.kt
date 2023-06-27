@@ -1,5 +1,6 @@
 package com.example.assignit.presentation.deeplink_screen
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +14,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.assignit.common.composables.LoadingIndicator
 import com.example.assignit.presentation.DEEPLINK_SCREEN
 import com.example.assignit.presentation.HOME_SCREEN
+import com.example.assignit.ui.theme.InvalidColor
 
 @Composable
 fun DeeplinkScreen(
@@ -22,36 +24,37 @@ fun DeeplinkScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Column(
+    Box(
         modifier = Modifier.fillMaxSize()
     ) {
+        Column {
+            uiState.error?.let { error ->
+                Text(text = error, color = InvalidColor)
+            }
+
+            Text(text = "Deeplink Screen $groupId")
+
+            Row {
+                Button(
+                    onClick = { viewModel.joinGroup(groupId) },
+                    enabled = !uiState.isLoading
+                ) {
+                    Text("Join Group")
+                }
+
+                Button(
+                    onClick = {
+                        openAndPopUp(HOME_SCREEN, DEEPLINK_SCREEN)
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        }
+
         if (uiState.isLoading) {
             LoadingIndicator()
         }
-
-        uiState.error?.let { error ->
-            Text(text = error) // Displaying error
-        }
-
-        Text(text = "Deeplink Screen $groupId")
-
-        Row {
-
-            Button(
-                onClick = { viewModel.joinGroup(groupId) },
-                enabled = !uiState.isLoading // Disabling button during loading
-            ) {
-                Text("Join Group")
-            }
-
-            Button(
-                onClick = {
-                    openAndPopUp(HOME_SCREEN, DEEPLINK_SCREEN)
-                }
-            ) {
-                Text("Cancel")
-            }
-        }
     }
-
 }
+

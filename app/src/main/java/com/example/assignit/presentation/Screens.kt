@@ -8,6 +8,8 @@ const val SIGN_UP_SCREEN = "SignUpScreen"
 const val SIGN_UP_USERNAME_SCREEN = "SignUpUsernameScreen"
 
 const val HOME_SCREEN = "HomeScreen"
+const val GROUP_SCREEN = "GroupScreen"
+const val GROUP_DETAIL_SCREEN = "GroupDetailScreen"
 
 const val DEEPLINK_SCREEN = "DeeplinkScreen"
 
