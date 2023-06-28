@@ -28,6 +28,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import com.example.assignit.presentation.auth_screens.create_task_screen.CreateTaskScreen
 import com.example.assignit.presentation.auth_screens.group_detail_screen.GroupDetailScreen
 import com.example.assignit.presentation.auth_screens.login_screen.LoginScreen
 import com.example.assignit.presentation.auth_screens.sign_up_screen.LoginPickUsernameScreen
@@ -170,8 +171,24 @@ fun NavGraphBuilder.taskAppGraph(
     composable(
         route = "$GROUP_DETAIL_SCREEN/{groupId}",
     ) {
-        GroupDetailScreen()
+        GroupDetailScreen(
+            navigate = { route -> appState.navigate(route) }
+        )
     }
+
+    composable(
+        route = "$CREATE_TASK_SCREEN/{groupId}",
+        arguments = listOf(navArgument("groupId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val groupId = backStackEntry.arguments?.getString("groupId")
+        CreateTaskScreen(
+            groupId = groupId,
+            openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
+            navigate = { route -> appState.navigate(route) }
+        )
+    }
+
+
 
     composable(
         route = DEEPLINK_SCREEN,

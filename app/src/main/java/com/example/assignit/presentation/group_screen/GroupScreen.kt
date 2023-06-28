@@ -10,14 +10,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Task
+import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,8 +34,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.assignit.R
 import com.example.assignit.common.composables.LoadingIndicator
 import com.example.assignit.model.Group
 import com.example.assignit.presentation.GROUP_DETAIL_SCREEN
@@ -58,7 +69,6 @@ fun GroupScreen(
             Text(text = it, color = InvalidColor)
         }
 
-        //TODO list of groups ( cards ) with the group name and the group members
 
         LazyColumn (
             modifier = Modifier
@@ -72,6 +82,7 @@ fun GroupScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupCard(
     group: Group,
@@ -81,16 +92,19 @@ fun GroupCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
+        onClick = {
+            navigate(GROUP_DETAIL_SCREEN + "/${group.id}")
+        },
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 8.dp,
         )
     ) {
         Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
         ) {
-
             Column(
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
@@ -100,32 +114,52 @@ fun GroupCard(
                     color = Color.White
                 )
 
-                Text(
-                    text = "Members: ${group.members.size}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White
-                )
-            }
-
-            Column(
-                verticalArrangement = Arrangement.Bottom
-            ) {
-
-                Button(
-                    onClick = { navigate(GROUP_DETAIL_SCREEN + "/${group.id}") },
-                    colors = ButtonDefaults.buttonColors(containerColor = DarkOrange),
-                    modifier = Modifier.align(Alignment.End)
+                Row (
+                    modifier = Modifier
+                        .padding(top = 8.dp).fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = "Open Group",
-                        color = Color.White
+
+                    CustomRow(
+                        Icons.Default.Groups,
+                        "${group.members.size}",
                     )
+
+                    CustomRow(
+                        Icons.Default.TaskAlt,
+                        "${group.tasks.size}",
+                    )
+
+                    CustomRow(
+                        Icons.Default.Edit,
+                        group.getFormattedDate(),
+                    )
+
                 }
-
-
             }
-
         }
+    }
+}
+
+@Composable
+fun CustomRow(
+    icon: ImageVector,
+    text: String,
+){
+    Row(verticalAlignment = Alignment.CenterVertically,){
+        Icon(
+            icon,
+            modifier = Modifier
+                .size(32.dp).padding(end = 8.dp),
+            contentDescription = text,
+            tint = Color.White
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.White
+        )
     }
 }
 

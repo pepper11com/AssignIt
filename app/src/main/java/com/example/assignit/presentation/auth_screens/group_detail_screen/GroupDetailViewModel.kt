@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.assignit.repository.GroupRepository
 import com.example.assignit.repository.UserRepository
+import com.example.assignit.util.resource.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,13 +26,20 @@ class GroupDetailViewModel @Inject constructor(
         savedStateHandle.get<String>("groupId")?.let { groupId ->
             viewModelScope.launch {
                 _uiState.value = GroupDetailUiState(isLoading = true)
-                try {
-                    val group = groupRepository.getGroup(groupId)
-                    _uiState.value = GroupDetailUiState(group = group)
-                } catch (e: Exception) {
-                    _uiState.value = GroupDetailUiState(error = "Error loading group details")
+                when (val groupResource = groupRepository.getGroup(groupId)) {
+                    is Resource.Success -> {
+                        _uiState.value = GroupDetailUiState(group = groupResource.data)
+                    }
+                    is Resource.Error -> {
+                        _uiState.value = GroupDetailUiState(error = "Error loading group details")
+                    }
+
+                    else -> {
+                        _uiState.value = GroupDetailUiState(error = "Unknown error occurred")
+                    }
                 }
             }
         }
     }
+
 }

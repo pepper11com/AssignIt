@@ -37,17 +37,23 @@ class GroupRepository @Inject constructor(
         }
     }
 
-    suspend fun getGroup(groupId: String): Group {
-        val groupDto = firebaseFirestore.collection(GROUP_COLLECTION)
-            .document(groupId)
-            .get()
-            .await()
-            .toObject(GroupDto::class.java)!!
+    suspend fun getGroup(groupId: String): Resource<Group> {
+        return try {
+            val groupDto = firebaseFirestore.collection(GROUP_COLLECTION)
+                .document(groupId)
+                .get()
+                .await()
+                .toObject(GroupDto::class.java)!!
 
-        val group = groupDto.toGroup()
-        Log.d("GroupRepository", "getGroup: $group")
-        return group
+            val group = groupDto.toGroup()
+            Log.d("GroupRepository", "getGroup: $group")
+            Resource.Success(group)
+        } catch (e: Exception) {
+            Log.e("GroupRepository", "Error getting group", e)
+            Resource.Error(e.message ?: "Unknown error occurred")
+        }
     }
+
 
 
 

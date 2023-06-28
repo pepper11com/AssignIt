@@ -1,6 +1,8 @@
 package com.example.assignit.model
 
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 
 data class Group(
     val id: String,
@@ -10,6 +12,10 @@ data class Group(
     val dayAndTimeEdited: Date = Date(),
     val tasks: List<Task> = listOf(), // Changed to List
 ) {
+    fun getFormattedDate(): String {
+        val format = SimpleDateFormat("d MMM yyyy, HH:mm", Locale.getDefault())
+        return format.format(dayAndTimeEdited)
+    }
     //dayAndTimeEdited is the date and time when the last change was made to the group (e.g. a task was added or removed)
     fun addTask(task: Task): Group {
         return this.copy(tasks = tasks + task,
