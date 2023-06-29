@@ -1,4 +1,4 @@
-package com.example.assignit.presentation.auth_screens.login_screen
+package com.example.assignit.presentation.login_screen
 
 import android.util.Log
 import androidx.lifecycle.ViewModel

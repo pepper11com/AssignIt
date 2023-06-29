@@ -1,4 +1,4 @@
-package com.example.assignit.presentation.auth_screens.login_screen
+package com.example.assignit.presentation.login_screen
 
 data class LoginUiState(
     val isLoading: Boolean = false,

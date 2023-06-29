@@ -1,8 +1,10 @@
-package com.example.assignit.presentation.auth_screens.create_task_screen
+package com.example.assignit.presentation.create_task_screen
 
 import com.example.assignit.model.Group
+import com.example.assignit.model.TaskDescription
 import com.example.assignit.model.User
 import java.util.Date
+import java.util.UUID
 
 data class CreateTaskUiState(
     val isLoading: Boolean = false,
@@ -10,7 +12,11 @@ data class CreateTaskUiState(
 
     val id: String = "",
     val title: String = "",
-    val description: String = "",
+    val descriptions: List<TaskDescription> = listOf(
+        TaskDescription(
+            id = UUID.randomUUID().toString(), description = "", done = false
+        )
+    ),
     val assignees: List<User>? = null,
     val dueDate: Date? = null,
 

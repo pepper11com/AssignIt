@@ -25,8 +25,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.assignit.R
 import com.example.assignit.common.composables.CustomTabRow
-import com.example.assignit.presentation.auth_screens.login_screen.LoginScreen
-import com.example.assignit.presentation.auth_screens.sign_up_screen.SignUpScreen
+import com.example.assignit.presentation.login_screen.LoginScreen
+import com.example.assignit.presentation.sign_up_screen.SignUpScreen
 import com.example.assignit.ui.theme.DarkOrange
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)

@@ -13,6 +13,9 @@ import com.example.assignit.repository.GroupRepository
 import com.example.assignit.repository.UserRepository
 import com.example.assignit.util.resource.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -25,6 +28,16 @@ class HomeViewModel @Inject constructor(
 
     private val _currentGroupId = MutableLiveData<String>()
     val currentGroupId: LiveData<String> get() = _currentGroupId
+
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading = _isLoading.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            delay(1)
+            _isLoading.value = false
+        }
+    }
 
     //TODO some more data loading later on...
     fun onAppStart(openAndPopUp: (String, String) -> Unit){

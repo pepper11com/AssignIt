@@ -18,6 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -32,7 +33,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import com.example.assignit.presentation.auth_screens.sign_up_screen.ValidationState
+import com.example.assignit.presentation.sign_up_screen.ValidationState
 import com.example.assignit.ui.theme.InvalidColor
 import com.example.assignit.ui.theme.MediumGrey
 import com.example.assignit.ui.theme.ValidColor
@@ -148,8 +149,6 @@ fun CustomOutlinedTextFieldSignUp(
     )
 }
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomOutlinedTextFieldLogin(
     label: String,
@@ -193,12 +192,12 @@ fun CustomOutlinedTextFieldLogin(
                 }
             }
         },
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            focusedLabelColor = Color.White,
+        colors = OutlinedTextFieldDefaults.colors(
             cursorColor = Color.White,
             selectionColors = TextSelectionColors(
                 MediumGrey, MediumGrey
-            )
+            ),
+            focusedLabelColor = Color.White,
         )
     )
 }

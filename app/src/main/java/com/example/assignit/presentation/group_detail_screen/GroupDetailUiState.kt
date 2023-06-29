@@ -1,4 +1,4 @@
-package com.example.assignit.presentation.auth_screens.group_detail_screen
+package com.example.assignit.presentation.group_detail_screen
 
 import com.example.assignit.model.Group
 

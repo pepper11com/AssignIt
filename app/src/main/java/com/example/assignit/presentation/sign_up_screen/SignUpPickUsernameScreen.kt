@@ -1,9 +1,5 @@
-package com.example.assignit.presentation.auth_screens.login_screen
+package com.example.assignit.presentation.sign_up_screen
 
-import android.app.Activity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.IntentSenderRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,25 +12,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -44,50 +34,26 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.assignit.R
-import com.example.assignit.common.composables.CustomOutlinedTextFieldLogin
+import com.example.assignit.common.composables.CustomOutlinedTextFieldSignUp
 import com.example.assignit.common.composables.LoadingIndicator
-import com.example.assignit.presentation.LOGIN_SCREEN
-import com.example.assignit.presentation.SIGN_UP_SCREEN
-import com.example.assignit.services.GoogleAuth
 import com.example.assignit.ui.theme.DarkOrange
 import com.example.assignit.ui.theme.InvalidColor
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun LoginScreen(
-    viewModel: LoginViewModel = hiltViewModel(),
-    googleAuthUiClient: GoogleAuth,
+fun LoginPickUsernameScreen(
+    viewModel: SignUpViewModel,
     openAndPopUp: (String, String) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
     val focusManager = LocalFocusManager.current
     val listState = rememberLazyListState()
-    val passwordVisibility = rememberSaveable { mutableStateOf(false) }
-    val areAllFieldsValid by viewModel.areAllFieldsValid.collectAsState()
-    val scope = rememberCoroutineScope()
-
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartIntentSenderForResult(),
-        onResult = { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                scope.launch {
-                    val signInResult = googleAuthUiClient.signInWithIntent(
-                        intent = result.data ?: return@launch
-                    )
-                    viewModel.onGoogleSignInClick(signInResult,  openAndPopUp)
-                }
-            }
-        }
-    )
+    val areAllFieldsValid by viewModel.areAllFieldsValidGoogle.collectAsState()
 
     Scaffold(
         modifier = Modifier
@@ -140,7 +106,7 @@ fun LoginScreen(
                         OutlinedButton(
                             onClick = {
                                 if (areAllFieldsValid) {
-                                    viewModel.onLoginClick()
+                                    viewModel.createGoogleUser(openAndPopUp)
                                 }
                             },
                             colors = ButtonDefaults.outlinedButtonColors(
@@ -178,59 +144,22 @@ fun LoginScreen(
                             fontSize = 32.sp,
                             fontWeight = FontWeight.SemiBold,
                             textAlign = TextAlign.Start,
-                            text = "Login",
+                            text = "Create an account",
                             color = Color.White,
                         )
                     }
 
-                    CustomOutlinedTextFieldLogin(
-                        label = "Email or Username",
-                        value = uiState.userInput,
-                        onValueChange = viewModel::onEmailOrUsernameChange,
-                        onAction = { focusManager.moveFocus(FocusDirection.Down) },
-                    )
 
-                    CustomOutlinedTextFieldLogin(
-                        label = "Password",
-                        value = uiState.password,
-                        onValueChange = viewModel::onPasswordChange,
+                    CustomOutlinedTextFieldSignUp(
+                        label = "Username",
+                        value = uiState.username,
+                        onValueChange = viewModel::onGoogleUsernameChange,
+                        validationState = uiState.isUsernameValid,
                         onAction = { focusManager.moveFocus(FocusDirection.Exit) },
-                        keyboardType = KeyboardType.Password,
-                        passwordVisibility = passwordVisibility,
-                        showPasswordToggle = true,
+                        validText = "Username available",
+                        invalidText = "Username taken",
                         action = ImeAction.Done
                     )
-
-                    TextButton(
-                        onClick = {
-                            scope.launch {
-                                val signInIntentSender = googleAuthUiClient.signInWithGoogle()
-                                launcher.launch(
-                                    IntentSenderRequest.Builder(
-                                        signInIntentSender ?: return@launch
-                                    ).build()
-                                )
-                            }
-                        }
-                    ) {
-                        Text(
-                            "Login with Google",
-                            color = Color.White
-                        )
-                    }
-
-
-                    TextButton(
-                        onClick = {
-                            openAndPopUp(SIGN_UP_SCREEN, LOGIN_SCREEN)
-                        }
-                    ) {
-                        Text(
-                            "Don't have an account? Sign up",
-                            color = Color.White
-                        )
-                    }
-
                 }
 
                 item {
@@ -241,6 +170,7 @@ fun LoginScreen(
                         )
                     }
                 }
+
             }
         }
     }
