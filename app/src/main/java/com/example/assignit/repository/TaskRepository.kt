@@ -4,12 +4,15 @@ import android.util.Log
 import com.example.assignit.model.Group
 import com.example.assignit.model.GroupDto
 import com.example.assignit.model.Task
+import com.example.assignit.model.TaskDto
 import com.example.assignit.util.resource.Resource
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -72,15 +75,45 @@ class TaskRepository @Inject constructor(
         }
     }
 
+    suspend fun getTasksByIds(taskIds: List<String>): List<Task> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val tasks = taskIds.map { taskId ->
+                    async {
+                        val taskSnapshot = firebaseFirestore.collection(TASK_COLLECTION)
+                            .document(taskId)
+                            .get()
+                            .await()
+                        Log.d("TaskRepository", "taskSnapshot: $taskSnapshot")
+                        taskSnapshot.toObject(TaskDto::class.java)?.toTask()
+                    }
+                }.awaitAll()
 
-
-
-    /*
-    fun getTaskData(.......):....{
-        // Use firebaseFirestore to get the data for a specific task
+                Log.d("TaskRepository", "tasks: $tasks")
+                tasks.filterNotNull()
+            } catch (e: Exception) {
+                emptyList<Task>()
+            }
+        }
     }
 
-     */
+
+    suspend fun getTasksByUser(userId: String): List<Task> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val taskSnapshot = firebaseFirestore.collection(TASK_COLLECTION)
+                    .whereArrayContains("assigneeIds", userId)
+                    .get()
+                    .await()
+
+                val tasks = taskSnapshot.documents.mapNotNull { it.toObject(TaskDto::class.java)?.toTask() }
+                tasks
+            } catch (e: Exception) {
+                emptyList<Task>()
+            }
+        }
+    }
+
 
 
     companion object{

@@ -29,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -56,6 +57,10 @@ fun GroupScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
+    LaunchedEffect(Unit){
+        viewModel.fetchGroupsForUser()
+    }
+
     Box(
         modifier = Modifier
             .background(Color.Black)
@@ -75,8 +80,12 @@ fun GroupScreen(
                 .background(Color.Black)
                 .fillMaxSize(),
         ){
-            items(uiState.groups) { group ->
-                GroupCard(group, navigate)
+            when{
+                uiState.groups.isNotEmpty() -> {
+                   items(uiState.groups) { group ->
+                       GroupCard(group, navigate)
+                   }
+                }
             }
         }
     }
@@ -116,7 +125,8 @@ fun GroupCard(
 
                 Row (
                     modifier = Modifier
-                        .padding(top = 8.dp).fillMaxWidth(),
+                        .padding(top = 8.dp)
+                        .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -151,7 +161,8 @@ fun CustomRow(
         Icon(
             icon,
             modifier = Modifier
-                .size(32.dp).padding(end = 8.dp),
+                .size(32.dp)
+                .padding(end = 8.dp),
             contentDescription = text,
             tint = Color.White
         )

@@ -21,11 +21,7 @@ class GroupViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(GroupUiState())
     val uiState: StateFlow<GroupUiState> = _uiState
 
-    init {
-        fetchGroupsForUser()
-    }
-
-    private fun fetchGroupsForUser() {
+     fun fetchGroupsForUser() {
         viewModelScope.launch {
             _uiState.value = GroupUiState(isLoading = true)
             try {
