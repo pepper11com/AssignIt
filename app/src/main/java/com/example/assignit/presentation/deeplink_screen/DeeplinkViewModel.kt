@@ -21,48 +21,6 @@ class DeeplinkViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(DeeplinkUiState())
     val uiState: StateFlow<DeeplinkUiState> = _uiState
 
-//    fun joinGroup(groupId: String) {
-//        _uiState.value = DeeplinkUiState(isLoading = true)
-//
-//        viewModelScope.launch {
-//            val firebaseUser = userRepository.currentUser.value ?: return@launch
-//            Log.d("DeeplinkViewModel", "joinGroup: ${firebaseUser.email}")
-//
-//            when (val userResource = userRepository.getUserDataById(firebaseUser.uid)) {
-//                is Resource.Success -> {
-//
-//                    Log.d("DeeplinkViewModel", "joinGroup: ${userResource.data}")
-//
-//                    val user = userResource.data
-//                    if (user != null) {
-//                        Log.d("DeeplinkViewModel", "groupId: $groupId")
-//                        when(val groupResource = groupRepository.addUserToGroup(groupId, user)) {
-//                            is Resource.Success -> {
-//                                _uiState.value = DeeplinkUiState() // reset state after successful operation
-//                            }
-//                            is Resource.Error -> {
-//                                Log.d("DeeplinkViewModel", "addGroupError: ${groupResource.message}")
-//                                _uiState.value = DeeplinkUiState(error = groupResource.message)
-//                            }
-//                            else -> {
-//                                // Handle other cases like loading, if required
-//                            }
-//                        }
-//                    } else {
-//                        _uiState.value = DeeplinkUiState(error = "Failed to get user data.")
-//                    }
-//                }
-//                is Resource.Error -> {
-//                    Log.d("DeeplinkViewModel", "joinGroupERROR: ${userResource.message}")
-//                    _uiState.value = DeeplinkUiState(error = userResource.message)
-//                }
-//                else -> {
-//                    // Handle loading
-//                }
-//            }
-//        }
-//    }
-
     fun joinGroup(groupId: String) {
         _uiState.value = DeeplinkUiState(isLoading = true)
 

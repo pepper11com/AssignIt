@@ -6,6 +6,7 @@ import com.example.assignit.model.GroupDto
 import com.example.assignit.model.Invitation
 import com.example.assignit.model.User
 import com.example.assignit.util.resource.Resource
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -21,17 +22,27 @@ class GroupRepository @Inject constructor(
 ){
 
     suspend fun createGroup(group: Group) {
-        // Add group to Firestore
+        // Convert Group to GroupDto
+        val groupDto = GroupDto(
+            id = group.id,
+            name = group.name,
+            adminId = group.adminId,
+            memberIds = group.memberIds.toMutableList(),
+            dayAndTimeEdited = Timestamp.now(),
+            taskIds = group.taskIds.toMutableList()
+        )
+
+        // Add groupDto to Firestore
         firebaseFirestore.collection(GROUP_COLLECTION)
-            .document(group.id)
-            .set(group)
+            .document(groupDto.id)
+            .set(groupDto)
 
         // Add group ID to the admin's list of groups
-        val userRef = firebaseFirestore.collection(USER_COLLECTION).document(group.admin.id!!)
+        val userRef = firebaseFirestore.collection(USER_COLLECTION).document(group.adminId)
         userRef.get().addOnSuccessListener { document ->
             val user = document.toObject(User::class.java)
             if (user != null) {
-                val updatedUser = user.copy(groups = user.groups + group.id)
+                val updatedUser = user.copy(groups = user.groups + groupDto.id)
                 userRef.set(updatedUser)
             }
         }
@@ -80,31 +91,29 @@ class GroupRepository @Inject constructor(
 
                     if (group != null) {
                         // Check if user is already a member or an admin of the group
-                        if (group.members.contains(user) || group.admin.id == user.id) {
+                        if (group.memberIds.contains(user.id) || group.adminId == user.id) {
                             return@runTransaction
                         }
 
-                        if (group.members.map { it.id }.contains(user.id) || group.admin.id == user.id) {
-                            return@runTransaction  // Return from the transaction without doing anything
-                        }
-
-                            // Add the user to the group's users list and get the updated group
-                        val updatedGroup = group.addMember(user)
-                        Log.d("GroupRepository", "addUserToGroup: Group members after addition = ${updatedGroup.members}")
+                        // Add the user to the group's users list and get the updated group
+                        val updatedGroup = group.addMember(user.id!!)
+                        Log.d("GroupRepository", "addUserToGroup: Group members after addition = ${updatedGroup.memberIds}")
 
                         // Update the group in the database
-                        // If you have GroupDto.fromGroup() function, use it here to convert updatedGroup to GroupDto.
-                        transaction.set(groupRef, updatedGroup)
+                        val updatedGroupDto = GroupDto(
+                            id = updatedGroup.id,
+                            name = updatedGroup.name,
+                            adminId = updatedGroup.adminId,
+                            memberIds = updatedGroup.memberIds.toMutableList(),
+                            dayAndTimeEdited = Timestamp.now(),
+                            taskIds = updatedGroup.taskIds.toMutableList()
+                        )
+                        transaction.set(groupRef, updatedGroupDto)
 
                         // Update user's group list
-                        Log.d("GroupRepository", "addUserToGroup: User = $groupId")
-                        val updatedUser = user.copy(groups = user.groups + groupId)
+                        val updatedUserGroups = (user.groups + groupId).toSet().toList()
+                        val updatedUser = user.copy(groups = updatedUserGroups)
                         transaction.set(userRef, updatedUser)
-
-//                        val updatedUserGroups = (user.groups + groupId).toSet().toList()
-//                        val updatedUser = user.copy(groups = updatedUserGroups)
-//                        transaction.set(userRef, updatedUser)
-
                     } else {
                         // If the group is not found, throw an exception to stop the transaction
                         throw Exception("Group not found")

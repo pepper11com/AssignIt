@@ -17,9 +17,11 @@ data class CreateTaskUiState(
             id = UUID.randomUUID().toString(), description = "", done = false
         )
     ),
-    val assignees: List<User>? = null,
+    val assignees: List<User> = emptyList(),
+    val memberUsers: List<User> = emptyList(),
     val dueDate: Date? = null,
 
     val groupId: String? = null,
     val group: Group? = null,
 )
+

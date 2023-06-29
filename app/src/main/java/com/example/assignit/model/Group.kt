@@ -7,33 +7,33 @@ import java.util.Locale
 data class Group(
     val id: String,
     val name: String,
-    val admin: User, // New field for admin user
-    val members: List<User> = listOf(admin), // Changed to List
+    val adminId: String,
+    val memberIds: List<String> = listOf(adminId),
     val dayAndTimeEdited: Date = Date(),
-    val tasks: List<Task> = listOf(), // Changed to List
+    val taskIds: List<String> = listOf(),
 ) {
     fun getFormattedDate(): String {
         val format = SimpleDateFormat("d MMM yyyy, HH:mm", Locale.getDefault())
         return format.format(dayAndTimeEdited)
     }
 
-    fun addTask(task: Task): Group {
-        return this.copy(tasks = tasks + task,
+    fun addTask(taskId: String): Group {
+        return this.copy(taskIds = taskIds + taskId,
             dayAndTimeEdited = Date())
     }
 
-    fun removeTask(task: Task): Group {
-        return this.copy(tasks = tasks - task,
+    fun removeTask(taskId: String): Group {
+        return this.copy(taskIds = taskIds - taskId,
             dayAndTimeEdited = Date())
     }
 
-    fun addMember(user: User): Group {
-        return this.copy(members = members + user,
+    fun addMember(userId: String): Group {
+        return this.copy(memberIds = memberIds + userId,
             dayAndTimeEdited = Date())
     }
 
-    fun removeMember(user: User): Group {
-        return this.copy(members = members - user,
+    fun removeMember(userId: String): Group {
+        return this.copy(memberIds = memberIds - userId,
             dayAndTimeEdited = Date())
     }
 
@@ -42,9 +42,8 @@ data class Group(
             dayAndTimeEdited = Date())
     }
 
-    fun changeAdmin(newAdmin: User): Group {
-        return this.copy(admin = newAdmin,
+    fun changeAdmin(newAdminId: String): Group {
+        return this.copy(adminId = newAdminId,
             dayAndTimeEdited = Date())
     }
-
 }

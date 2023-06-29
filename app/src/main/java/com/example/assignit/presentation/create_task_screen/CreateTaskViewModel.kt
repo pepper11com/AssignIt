@@ -67,14 +67,15 @@ class CreateTaskViewModel @Inject constructor(
     }
 
     fun onUserSelected(user: User) {
-        val updatedAssignees = (_uiState.value.assignees ?: emptyList()).toMutableList().apply { add(user) }
+        val updatedAssignees = _uiState.value.assignees.toMutableList().apply { add(user) }
         _uiState.value = _uiState.value.copy(assignees = updatedAssignees)
     }
 
     fun onUserDeselected(user: User) {
-        val updatedAssignees = (_uiState.value.assignees ?: emptyList()).toMutableList().apply { remove(user) }
+        val updatedAssignees = _uiState.value.assignees.filterNot { it == user }
         _uiState.value = _uiState.value.copy(assignees = updatedAssignees)
     }
+
 
     fun createTask() {
         val task = _uiState.value.groupId?.let {
@@ -83,7 +84,7 @@ class CreateTaskViewModel @Inject constructor(
                 groupId = it,
                 title = _uiState.value.title,
                 descriptions = _uiState.value.descriptions,
-                assignees = _uiState.value.assignees ?: emptyList(),
+                assigneeIds = _uiState.value.assignees.filter { user -> user.id != null }.map { user -> user.id!! },
                 dueDate = _uiState.value.dueDate ?: Date()
             )
         }
@@ -104,12 +105,34 @@ class CreateTaskViewModel @Inject constructor(
     }
 
 
+
     private fun loadGroup() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             when (val groupResource = _uiState.value.groupId?.let { groupRepository.getGroup(it) }) {
                 is Resource.Success -> {
-                    _uiState.value = _uiState.value.copy(group = groupResource.data, isLoading = false)
+                    val group = groupResource.data
+                    _uiState.value = _uiState.value.copy(group = group, isLoading = false)
+                    // Now that we have the group, load the memberUsers
+                    group?.memberIds?.forEach { memberId ->
+                        when (val userResource = userRepository.getUserDataById(memberId)) {
+                            is Resource.Success -> {
+                                val user = userResource.data
+                                val updatedMemberUsers = _uiState.value.memberUsers.toMutableList().apply {
+                                    if (user != null) {
+                                        add(user)
+                                    }
+                                }
+                                _uiState.value = _uiState.value.copy(memberUsers = updatedMemberUsers)
+                            }
+                            is Resource.Error -> {
+                                _uiState.value = _uiState.value.copy(error = userResource.message, isLoading = false)
+                            }
+                            else -> {
+                                _uiState.value = _uiState.value.copy(isLoading = false, error = "Something went wrong")
+                            }
+                        }
+                    }
                 }
                 is Resource.Error -> {
                     _uiState.value = _uiState.value.copy(error = groupResource.message, isLoading = false)
@@ -120,4 +143,5 @@ class CreateTaskViewModel @Inject constructor(
             }
         }
     }
+
 }

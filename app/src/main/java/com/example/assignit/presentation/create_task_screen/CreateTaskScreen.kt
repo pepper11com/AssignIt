@@ -199,8 +199,8 @@ fun CreateTaskScreen(
 
                 item {
                     UserSelection(
-                        allUsers = uiState.group?.members ?: emptyList(),
-                        selectedUsers = uiState.assignees ?: emptyList(),
+                        allUsers = uiState.memberUsers,
+                        selectedUsers = uiState.assignees,
                         onUserSelected = viewModel::onUserSelected,
                         onUserDeselected = viewModel::onUserDeselected,
                         openDialog = openAssignDialog,

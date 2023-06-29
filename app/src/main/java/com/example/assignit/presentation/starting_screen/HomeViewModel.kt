@@ -55,13 +55,14 @@ class HomeViewModel @Inject constructor(
                 is Resource.Success -> {
                     val user = userResource.data
                     val groupId = UUID.randomUUID().toString() // generate a unique ID for the group
-                    val group = user?.let { Group(groupId, name, it) }
-                    if (group != null) {
+                    // Check if the user and its ID are not null before trying to create a Group
+                    if (user?.id != null) {
+                        val group = Group(groupId, name, user.id)
                         groupRepository.createGroup(group)
                         Log.d("HomeViewModel", "createGroup: $group $user $groupId")
                         //groupRepository.addUserToGroup(groupId, user)
+                        _currentGroupId.value = groupId
                     }
-                    _currentGroupId.value = groupId
                 }
                 is Resource.Error -> {
                     // Handle error when fetching user data
@@ -73,6 +74,8 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
+
+
 
 
 }

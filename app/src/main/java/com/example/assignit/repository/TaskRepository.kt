@@ -2,8 +2,10 @@ package com.example.assignit.repository
 
 import android.util.Log
 import com.example.assignit.model.Group
+import com.example.assignit.model.GroupDto
 import com.example.assignit.model.Task
 import com.example.assignit.util.resource.Resource
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -38,16 +40,27 @@ class TaskRepository @Inject constructor(
 
                 Log.d("TaskRepository", "groupSnapshot: $groupSnapshot")
 
-                val group = groupSnapshot.toObject(Group::class.java)
+                val groupDto = groupSnapshot.toObject(GroupDto::class.java)
+                val group = groupDto?.toGroup()
+
+
 
                 Log.d("TaskRepository", "group: $group")
 
                 return@withContext if (group != null) {
-                    val updatedGroup = group.addTask(task)
+                    val updatedGroup = group.addTask(task.id) // Update only task ID, not the whole task object
 
                     Log.d("TaskRepository", "updatedGroup: $updatedGroup")
 
-                    groupSnapshot.reference.set(updatedGroup).await()
+                    val updatedGroupDto = GroupDto(
+                        id = updatedGroup.id,
+                        name = updatedGroup.name,
+                        adminId = updatedGroup.adminId,
+                        memberIds = updatedGroup.memberIds.toMutableList(),
+                        dayAndTimeEdited = Timestamp.now(),
+                        taskIds = updatedGroup.taskIds.toMutableList()
+                    )
+                    groupSnapshot.reference.set(updatedGroupDto).await()
                     Resource.Success(updatedGroup)
                 } else {
                     Resource.Error("Group not found")
@@ -61,8 +74,9 @@ class TaskRepository @Inject constructor(
 
 
 
+
     /*
-    fun getTaskData(taskId: String): Flow<Task?> {
+    fun getTaskData(.......):....{
         // Use firebaseFirestore to get the data for a specific task
     }
 

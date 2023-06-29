@@ -7,7 +7,6 @@ data class Task(
     val groupId: String,
     val title: String,
     val descriptions: List<TaskDescription>,
-    val assignees: List<User>,
+    val assigneeIds: List<String>,
     val dueDate: Date,
 )
-

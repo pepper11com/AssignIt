@@ -103,10 +103,9 @@ fun GroupDetailScreen(
 
                             //TODO: Add the list of members here
 
-                            items(uiState.group!!.members.size) { member ->
-                                Text(text = uiState.group!!.members[member].username)
+                            items(uiState.members.size) { member ->
+                                Text(text = uiState.members[member].username)
                             }
-
 
                         }
                     }

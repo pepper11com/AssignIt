@@ -123,12 +123,12 @@ fun GroupCard(
 
                     CustomRow(
                         Icons.Default.Groups,
-                        "${group.members.size}",
+                        "${group.memberIds.size}",
                     )
 
                     CustomRow(
                         Icons.Default.TaskAlt,
-                        "${group.tasks.size}",
+                        "${group.taskIds.size}",
                     )
 
                     CustomRow(
